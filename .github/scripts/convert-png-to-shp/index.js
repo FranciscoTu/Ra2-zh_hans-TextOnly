@@ -40,7 +40,10 @@ const parseACT = (file) => {
   //以Hex方式读取文件
   const data = fs.readFileSync(file)
   //遍历每个字节，每三个字节代表一个颜色值（RGB）
-  for (let i = 0; i < data.length; i += 3) {
+  //向色盘推送第一个颜色
+  colors.push([data[0], data[1], data[2]])
+  //起始值为3，用于跳过透明通道
+  for (let i = 3; i < data.byteLength; i += 3) {
     //获取当前字节
     let r = data[i]
     let g = data[i + 1]
@@ -172,6 +175,9 @@ const getShpBin = async (fileName) => {
       }
     }
   }
+  /**
+   * @type {[r:number,g:number,b:number][]}
+   */
   const imgRGB = await loadImage(fileName).then((image) => {
     ctx.drawImage(image, 0, 0, 60, 48)
     if (printTitle) {
@@ -219,14 +225,32 @@ const getShpBin = async (fileName) => {
     }
     return imgDataRGB
   })
-  const indexedMap = imgRGB.map(([r, g, b]) => {
-    // 如果彩虹表已有值，取出
+  const indexedMap = imgRGB.map(([r, g, b], index) => {
+    // 四个角透明色区域返回透明色
+    switch (index) {
+      case 0:
+      case 1:
+      case 58:
+      case 59:
+      case 60:
+      case 119:
+      case 2760:
+      case 2819:
+      case 2820:
+      case 2821:
+      case 2878:
+      case 2879:
+        return 0
+      default:
+    }
     if (rainbowSheet[(r << 16) | (g << 8) | b] !== undefined) {
+      // 如果彩虹表已有值，取出
       return rainbowSheet[(r << 16) | (g << 8) | b]
     }
     let minDeltaE = 101
     let acTindex = -1
-    for (let i = 0; i < 255; i++) {
+    //初始值为1，屏蔽透明色
+    for (let i = 1; i < 255; i++) {
       let res = deltaE(actRGB[i], [r, g, b], 'rgb')
       if (res < minDeltaE) {
         minDeltaE = res
