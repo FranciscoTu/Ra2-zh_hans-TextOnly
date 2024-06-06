@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # - name: Download latest csf translate file in INI format
       #   run: ./.github/scripts/download_latest_csf.cmd
       #   shell: cmd
@@ -54,7 +54,7 @@ jobs:
           ./.github/bin/ccmixar/ccmixar.exe pack -game ra2 -dir "./_src_files/cameo" -mix "./_src_files/language/cameo.mix" -checksum -encrypt
           ./.github/bin/ccmixar/ccmixar.exe pack -game ra2 -dir "./_src_files/cameomd" -mix "./_src_files/langmd/cameomd.mix" -checksum -encrypt
         shell: pwsh
-      - name: Copy there files cameo files
+      - name: Copy other files
         run: |
           Copy-Item "./bik/ra2/*" -Destination "./_src_files/language/" -Force
           Copy-Item "./bik/yr/*" -Destination "./_src_files/langmd/" -Force
@@ -62,6 +62,11 @@ jobs:
           Copy-Item "./credits/creditsmd.txt" -Destination "./_src_files/langmd/" -Force
           Copy-Item "./fnt/game.fnt" -Destination "./_src_files/language/" -Force
           Copy-Item "./shp/grfxtxt.shp" -Destination "./_src_files/language/" -Force
+        shell: pwsh
+      - name: Pack audio.mix & audiomd.mix
+        run: |
+          ./.github/bin/ccmixar/ccmixar.exe pack -game ra2 -dir "./_src_files/audio" -mix "./_src_files/language/audio.mix"
+          ./.github/bin/ccmixar/ccmixar.exe pack -game ra2 -dir "./_src_files/audiomd" -mix "./_src_files/langmd/audiomd.mix"
         shell: pwsh
       - name: Pack langeuage pack mix files
         run: |
@@ -88,8 +93,15 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
-          name: LanguagePack-ChineseSimplified
-          path: RedAlert2-LanguagePack-ChineseSimplified.zip
+          name: LanguagePack-zh_hans
+          path: RedAlert2-LanguagePack-zh_hans.zip
+          retention-days: 90
+      - name: Upload noaudio pack to artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          name: LanguagePack-zh_hans-NoChineseAudio
+          path: RedAlert2-LanguagePack-zh_hans-NoChineseAudio.zip
           retention-days: 90
       # - name: Upload to OSS (Commit)
       #   uses: iamapig120/upload-to-oss@master
